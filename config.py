@@ -12,6 +12,9 @@ MAX_WORKERS = 4
 DEFAULT_MEMORY_QUOTA = 5 * 1024 * 1024 * 1024  # 5GB default quota (in bytes)
 DEFAULT_MEMORY_QUOTA_RATE = 10  # minutes to rate limit
 
+# Network settings
+PROXY_URL = None  # Format: 'socks5://user:pass@host:port' or 'http://host:port'
+
 # Memory control
 SIZE_ESTIMATION_BUFFER = 1.10
 AVAILABLE_MEMORY = 20 * 1024 * 1024 * 1024  # 20GB

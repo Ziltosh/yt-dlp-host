@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from config import DOWNLOAD_DIR, TASK_CLEANUP_TIME, MAX_WORKERS
+from config import DOWNLOAD_DIR, TASK_CLEANUP_TIME, MAX_WORKERS, PROXY_URL
 from src.json_utils import load_tasks, save_tasks, load_keys
 from src.auth import check_memory_limit
 import yt_dlp, os, threading, json, time, shutil
@@ -57,6 +57,9 @@ def check_and_get_size(url, video_format=None, audio_format=None):
             'extract_flat': False,
             'skip_download': True
         }
+        
+        if PROXY_URL:
+            ydl_opts['proxy'] = PROXY_URL
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -168,6 +171,9 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
             ydl_opts['download_ranges'] = download_range_func(None, [(start_seconds, end_seconds)])
             ydl_opts['force_keyframes_at_cuts'] = tasks[task_id].get('force_keyframes', False)
         
+        if PROXY_URL:
+            ydl_opts['proxy'] = PROXY_URL
+        
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
@@ -208,6 +214,9 @@ def get_live(task_id, url, type, start, duration, video_format="bestvideo", audi
             'download_ranges': lambda info, *args: [{'start_time': start_time, 'end_time': end_time,}],
             'merge_output_format': 'mp4' if type.lower() == 'video' else None
         }
+        
+        if PROXY_URL:
+            ydl_opts['proxy'] = PROXY_URL
         
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
