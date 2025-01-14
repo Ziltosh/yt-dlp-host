@@ -49,13 +49,14 @@ def get_best_format_size(info, formats, formats_list, is_video=True):
     
     return best_format
 
-def check_and_get_size(url, video_format=None, audio_format=None):
+def check_and_get_size(url, video_format=None, audio_format=None, proxy=None):
     try:
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
             'extract_flat': True,
-            'skip_download': True
+            'skip_download': True,
+            'proxy': proxy
         }
         
         if VERBOSE:
@@ -154,7 +155,7 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", 
             ydl_opts['proxy'] = PROXY_URL
             
         
-        total_size = check_and_get_size(url, video_format if type.lower() == 'video' else None, audio_format)
+        total_size = check_and_get_size(url, video_format if type.lower() == 'video' else None, audio_format, proxy)
         if total_size <= 0: handle_task_error(task_id, f"Error getting size: {total_size}")
 
         key_name = tasks[task_id].get('key_name')
