@@ -153,11 +153,6 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", 
         elif PROXY_URL:
             ydl_opts['proxy'] = PROXY_URL
             
-        # print proxy url
-        if 'proxy' in ydl_opts:
-            print(f'Using proxy: {ydl_opts["proxy"]}')
-        else:
-            print('No proxy specified')
         
         total_size = check_and_get_size(url, video_format if type.lower() == 'video' else None, audio_format)
         if total_size <= 0: handle_task_error(task_id, f"Error getting size: {total_size}")
@@ -299,15 +294,15 @@ def process_tasks():
         for task_id, task in list(tasks.items()):
             if task['status'] == 'waiting':
                 if task['task_type'] == 'get_video':
-                    executor.submit(get, task_id, task['url'], 'video', task['video_format'], task['audio_format'])
+                    executor.submit(get, task_id, task['url'], 'video', task['video_format'], task['audio_format'], task['proxy'])
                 elif task['task_type'] == 'get_audio':
-                    executor.submit(get, task_id, task['url'], 'audio', 'bestvideo', task['audio_format'])
+                    executor.submit(get, task_id, task['url'], 'audio', 'bestvideo', task['audio_format'], task['proxy'])
                 elif task['task_type'] == 'get_info':
                     executor.submit(get_info, task_id, task['url'])
                 elif task['task_type'] == 'get_live_video':
-                    executor.submit(get_live, task_id, task['url'], 'video', task['start'], task['duration'], task['video_format'], task['audio_format'])
+                    executor.submit(get_live, task_id, task['url'], 'video', task['start'], task['duration'], task['video_format'], task['audio_format'], task['proxy'])
                 elif task['task_type'] == 'get_live_audio':
-                    executor.submit(get_live, task_id, task['url'], 'audio', task['start'], task['duration'], 'bestvideo', task['audio_format'])
+                    executor.submit(get_live, task_id, task['url'], 'audio', task['start'], task['duration'], 'bestvideo', task['audio_format'], task['proxy'])
             elif task['status'] in ['completed', 'error']:
                 completed_time = datetime.fromisoformat(task['completed_time'])
                 if current_time - completed_time > timedelta(minutes=TASK_CLEANUP_TIME):
