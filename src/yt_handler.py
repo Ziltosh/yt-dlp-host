@@ -58,7 +58,9 @@ def check_and_get_size(url, video_format=None, audio_format=None):
             'skip_download': True
         }
         
-        if PROXY_URL:
+        if tasks[task_id].get('proxy'):
+            ydl_opts['proxy'] = tasks[task_id].get('proxy')
+        elif PROXY_URL:
             ydl_opts['proxy'] = PROXY_URL
             
         if VERBOSE:
@@ -128,8 +130,6 @@ def get_info(task_id, url):
 def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
     try:
         tasks = load_tasks()
-        task = tasks[task_id]
-        proxy = task.get('proxy')
         
         tasks[task_id].update(status='processing')
         save_tasks(tasks)
@@ -153,7 +153,7 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
             'progress_hooks': [progress_hook],
         }
         
-        if proxy:
+        if tasks[task_id].get('proxy'):
             ydl_opts['proxy'] = proxy
         elif PROXY_URL:
             ydl_opts['proxy'] = PROXY_URL
@@ -213,8 +213,7 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
 def get_live(task_id, url, type, start, duration, video_format="bestvideo", audio_format="bestaudio"):
     try:
         tasks = load_tasks()
-        task = tasks[task_id]
-        proxy = task.get('proxy')
+        proxy = tasks[task_id].get('proxy')
         
         tasks[task_id].update(status='processing')
         save_tasks(tasks)
