@@ -128,9 +128,36 @@ def get_info(task_id, url):
 def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
     try:
         tasks = load_tasks()
+        task = tasks[task_id]
+        proxy = task.get('proxy')
+        
         tasks[task_id].update(status='processing')
         save_tasks(tasks)
-
+        
+        output_template = os.path.join(DOWNLOAD_DIR, task_id, '%(title)s.%(ext)s')
+        os.makedirs(os.path.join(DOWNLOAD_DIR, task_id), exist_ok=True)
+        
+        format_str = f"{video_format}+{audio_format}" if type == "get_video" else audio_format
+        
+        def progress_hook(d):
+            if d['status'] == 'downloading':
+                tasks = load_tasks()
+                tasks[task_id].update(progress=d.get('_percent_str', '0%').strip())
+                save_tasks(tasks)
+        
+        ydl_opts = {
+            'format': format_str,
+            'outtmpl': output_template,
+            'quiet': True,
+            'no_warnings': True,
+            'progress_hooks': [progress_hook],
+        }
+        
+        if proxy:
+            ydl_opts['proxy'] = proxy
+        elif PROXY_URL:
+            ydl_opts['proxy'] = PROXY_URL
+        
         total_size = check_and_get_size(url, video_format if type.lower() == 'video' else None, audio_format)
         if total_size <= 0: handle_task_error(task_id, f"Error getting size: {total_size}")
 
@@ -144,10 +171,6 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
         if not check_memory_limit(api_key, total_size, task_id):
             raise Exception("Memory limit exceeded. Maximum 5GB per 10 minutes.")
         
-        download_path = os.path.join(DOWNLOAD_DIR, task_id)
-        if not os.path.exists(download_path):
-            os.makedirs(download_path)
-
         if type.lower() == 'audio':
             format_option = f'{audio_format}/best'
             output_template = f'audio.%(ext)s'
@@ -157,7 +180,7 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
 
         ydl_opts = {
             'format': format_option,
-            'outtmpl': os.path.join(download_path, output_template),
+            'outtmpl': os.path.join(DOWNLOAD_DIR, task_id, output_template),
             'merge_output_format': 'mp4' if type.lower() == 'video' else None
         }
 
@@ -174,16 +197,13 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
             ydl_opts['download_ranges'] = download_range_func(None, [(start_seconds, end_seconds)])
             ydl_opts['force_keyframes_at_cuts'] = tasks[task_id].get('force_keyframes', False)
         
-        if PROXY_URL:
-            ydl_opts['proxy'] = PROXY_URL
-        
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
             tasks = load_tasks()
             tasks[task_id].update(status='completed')
             tasks[task_id]['completed_time'] = datetime.now().isoformat()
-            tasks[task_id]['file'] = f'/files/{task_id}/' + os.listdir(download_path)[0]
+            tasks[task_id]['file'] = f'/files/{task_id}/' + os.listdir(os.path.join(DOWNLOAD_DIR, task_id))[0]
             save_tasks(tasks)
         except Exception as e:
             handle_task_error(task_id, e)
@@ -193,32 +213,36 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
 def get_live(task_id, url, type, start, duration, video_format="bestvideo", audio_format="bestaudio"):
     try:
         tasks = load_tasks()
+        task = tasks[task_id]
+        proxy = task.get('proxy')
+        
         tasks[task_id].update(status='processing')
         save_tasks(tasks)
         
-        download_path = os.path.join(DOWNLOAD_DIR, task_id)
-        if not os.path.exists(download_path):
-            os.makedirs(download_path)
-
-        current_time = int(time.time())
-        start_time = current_time - start
-        end_time = start_time + duration
-
-        if type.lower() == 'audio':
-            format_option = f'{audio_format}'
-            output_template = f'live_audio.%(ext)s'
-        else:
-            format_option = f'{video_format}+{audio_format}'
-            output_template = f'live_video.%(ext)s'
-
+        output_template = os.path.join(DOWNLOAD_DIR, task_id, '%(title)s.%(ext)s')
+        os.makedirs(os.path.join(DOWNLOAD_DIR, task_id), exist_ok=True)
+        
+        format_str = f"{video_format}+{audio_format}" if type == "get_live_video" else audio_format
+        
+        def progress_hook(d):
+            if d['status'] == 'downloading':
+                tasks = load_tasks()
+                tasks[task_id].update(progress=d.get('_percent_str', '0%').strip())
+                save_tasks(tasks)
+        
         ydl_opts = {
-            'format': format_option,
-            'outtmpl': os.path.join(download_path, output_template),
-            'download_ranges': lambda info, *args: [{'start_time': start_time, 'end_time': end_time,}],
-            'merge_output_format': 'mp4' if type.lower() == 'video' else None
+            'format': format_str,
+            'outtmpl': output_template,
+            'quiet': True,
+            'no_warnings': True,
+            'progress_hooks': [progress_hook],
+            'download_ranges': download_range_func(None, [(start, start + duration)]),
+            'force_keyframes_at_cuts': True
         }
         
-        if PROXY_URL:
+        if proxy:
+            ydl_opts['proxy'] = proxy
+        elif PROXY_URL:
             ydl_opts['proxy'] = PROXY_URL
         
         try:
@@ -227,7 +251,7 @@ def get_live(task_id, url, type, start, duration, video_format="bestvideo", audi
             tasks = load_tasks()
             tasks[task_id].update(status='completed')
             tasks[task_id]['completed_time'] = datetime.now().isoformat()
-            tasks[task_id]['file'] = f'/files/{task_id}/' + os.listdir(download_path)[0]
+            tasks[task_id]['file'] = f'/files/{task_id}/' + os.listdir(os.path.join(DOWNLOAD_DIR, task_id))[0]
             save_tasks(tasks)
         except Exception as e:
             handle_task_error(task_id, e)

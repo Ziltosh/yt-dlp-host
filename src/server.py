@@ -24,6 +24,7 @@ def get_video():
     start_time = data.get('start_time')
     end_time = data.get('end_time')
     force_keyframes = data.get('force_keyframes')
+    proxy = data.get('proxy')
     
     if not url:
         return jsonify({'status': 'error', 'message': 'URL is required'}), 400
@@ -39,7 +40,8 @@ def get_video():
         'audio_format': audio_format,
         'start_time': start_time,
         'end_time': end_time,
-        'force_keyframes': force_keyframes
+        'force_keyframes': force_keyframes,
+        'proxy': proxy
     }
     save_tasks(tasks)
 
@@ -54,6 +56,7 @@ def get_audio():
     start_time = data.get('start_time')
     end_time = data.get('end_time')
     force_keyframes = data.get('force_keyframes')
+    proxy = data.get('proxy')
     
     if not url:
         return jsonify({'status': 'error', 'message': 'URL is required'}), 400
@@ -68,7 +71,8 @@ def get_audio():
         'audio_format': audio_format,
         'start_time': start_time,
         'end_time': end_time,
-        'force_keyframes': force_keyframes
+        'force_keyframes': force_keyframes,
+        'proxy': proxy
     }
     save_tasks(tasks)
 
@@ -110,35 +114,27 @@ def get_info():
 def get_live_video():
     data = request.json
     url = data.get('url')
-    start = data.get('start', 0)
-    duration = data.get('duration')
     video_format = data.get('video_format', 'bestvideo')
     audio_format = data.get('audio_format', 'bestaudio')
+    start = data.get('start', 0)
+    duration = data.get('duration', 60)
+    proxy = data.get('proxy')
     
     if not url:
         return jsonify({'status': 'error', 'message': 'URL is required'}), 400
     
     task_id = generate_random_id()
-    # keys = load_keys()
-    # key_name = auth.get_key_name(request.headers.get('X-API-Key'))
-    # key_info = keys[key_name]
-    # keys[key_name] = key_info
-    # auth.save_keys(keys)
-
-    # if 'task_ids' not in key_info:
-    #     key_info['task_ids'] = []
-    # key_info['task_ids'].append(task_id)
-
     tasks = load_tasks()
     tasks[task_id] = {
         'key_name': auth.get_key_name(request.headers.get('X-API-Key')),
         'status': 'waiting',
         'task_type': 'get_live_video',
         'url': url,
+        'video_format': video_format,
+        'audio_format': audio_format,
         'start': start,
         'duration': duration,
-        'video_format': video_format,
-        'audio_format': audio_format
+        'proxy': proxy
     }
     save_tasks(tasks)
 
@@ -149,33 +145,25 @@ def get_live_video():
 def get_live_audio():
     data = request.json
     url = data.get('url')
-    start = data.get('start', 0)
-    duration = data.get('duration', 5)
     audio_format = data.get('audio_format', 'bestaudio')
+    start = data.get('start', 0)
+    duration = data.get('duration', 60)
+    proxy = data.get('proxy')
     
     if not url:
         return jsonify({'status': 'error', 'message': 'URL is required'}), 400
     
     task_id = generate_random_id()
-    # keys = load_keys()
-    # key_name = auth.get_key_name(request.headers.get('X-API-Key'))
-    # key_info = keys[key_name]
-
-    # if 'task_ids' not in key_info:
-    #     key_info['task_ids'] = []
-    # key_info['task_ids'].append(task_id)
-    # keys[key_name] = key_info
-    # auth.save_keys(keys)
-
     tasks = load_tasks()
     tasks[task_id] = {
         'key_name': auth.get_key_name(request.headers.get('X-API-Key')),
         'status': 'waiting',
         'task_type': 'get_live_audio',
         'url': url,
+        'audio_format': audio_format,
         'start': start,
         'duration': duration,
-        'audio_format': audio_format
+        'proxy': proxy
     }
     save_tasks(tasks)
 
