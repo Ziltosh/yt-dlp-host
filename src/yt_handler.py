@@ -177,7 +177,8 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", 
         ydl_opts = {
             'format': format_option,
             'outtmpl': os.path.join(DOWNLOAD_DIR, task_id, output_template),
-            'merge_output_format': 'mp4' if type.lower() == 'video' else None
+            'merge_output_format': 'mp4' if type.lower() == 'video' else None,
+            'proxy': proxy
         }
 
         if tasks[task_id].get('start_time') or tasks[task_id].get('end_time'):
