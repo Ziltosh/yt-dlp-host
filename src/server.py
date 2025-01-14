@@ -83,7 +83,8 @@ def get_audio():
 def get_info():
     data = request.json
     url = data.get('url')
-    
+    proxy = data.get('proxy')
+
     if not url:
         return jsonify({'status': 'error', 'message': 'URL is required'}), 400
     
@@ -103,7 +104,8 @@ def get_info():
         'key_name': auth.get_key_name(request.headers.get('X-API-Key')),
         'status': 'waiting',
         'task_type': 'get_info',
-        'url': url
+        'url': url,
+        'proxy': proxy
     }
     save_tasks(tasks)
 

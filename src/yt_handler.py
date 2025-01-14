@@ -92,7 +92,7 @@ def check_and_get_size(url, video_format=None, audio_format=None, proxy=None):
         print(f"Error in check_and_get_size: {str(e)}")
         return -1
 
-def get_info(task_id, url):
+def get_info(task_id, url, proxy=None):
     try:
         tasks = load_tasks()
         tasks[task_id].update(status='processing')
@@ -102,7 +102,7 @@ def get_info(task_id, url):
         if not os.path.exists(download_path):
             os.makedirs(download_path)
 
-        ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': True, 'skip_download': True}
+        ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': True, 'skip_download': True, 'proxy': proxy}
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -127,6 +127,10 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", 
     try:
         tasks = load_tasks()
         
+        proxy = tasks[task_id].get('proxy')
+        if not proxy:
+            proxy = PROXY_URL
+        
         tasks[task_id].update(status='processing')
         save_tasks(tasks)
         
@@ -147,13 +151,8 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", 
             'quiet': True,
             'no_warnings': True,
             'progress_hooks': [progress_hook],
+            'proxy': proxy
         }
-        
-        if tasks[task_id].get('proxy'):
-            ydl_opts['proxy'] = proxy
-        elif PROXY_URL:
-            ydl_opts['proxy'] = PROXY_URL
-            
         
         total_size = check_and_get_size(url, video_format if type.lower() == 'video' else None, audio_format, proxy)
         if total_size <= 0: handle_task_error(task_id, f"Error getting size: {total_size}")
@@ -212,6 +211,8 @@ def get_live(task_id, url, type, start, duration, video_format="bestvideo", audi
     try:
         tasks = load_tasks()
         proxy = tasks[task_id].get('proxy')
+        if not proxy:
+            proxy = PROXY_URL
         
         tasks[task_id].update(status='processing')
         save_tasks(tasks)
@@ -234,13 +235,10 @@ def get_live(task_id, url, type, start, duration, video_format="bestvideo", audi
             'no_warnings': True,
             'progress_hooks': [progress_hook],
             'download_ranges': download_range_func(None, [(start, start + duration)]),
-            'force_keyframes_at_cuts': True
+            'force_keyframes_at_cuts': True,
+            'proxy': proxy
         }
         
-        if proxy:
-            ydl_opts['proxy'] = proxy
-        elif PROXY_URL:
-            ydl_opts['proxy'] = PROXY_URL
         
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
