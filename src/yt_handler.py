@@ -54,7 +54,7 @@ def check_and_get_size(url, video_format=None, audio_format=None):
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
-            'extract_flat': False,
+            'extract_flat': True,
             'skip_download': True
         }
         
