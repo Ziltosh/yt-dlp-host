@@ -122,7 +122,7 @@ def get_info(task_id, url):
     except Exception as e:
         handle_task_error(task_id, e)
 
-def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio"):
+def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", proxy=None):
     try:
         tasks = load_tasks()
         
