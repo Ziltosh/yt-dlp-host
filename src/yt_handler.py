@@ -152,6 +152,12 @@ def get(task_id, url, type, video_format="bestvideo", audio_format="bestaudio", 
             ydl_opts['proxy'] = proxy
         elif PROXY_URL:
             ydl_opts['proxy'] = PROXY_URL
+            
+        # print proxy url
+        if 'proxy' in ydl_opts:
+            print(f'Using proxy: {ydl_opts["proxy"]}')
+        else:
+            print('No proxy specified')
         
         total_size = check_and_get_size(url, video_format if type.lower() == 'video' else None, audio_format)
         if total_size <= 0: handle_task_error(task_id, f"Error getting size: {total_size}")
