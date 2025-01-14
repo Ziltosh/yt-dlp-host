@@ -58,11 +58,6 @@ def check_and_get_size(url, video_format=None, audio_format=None):
             'skip_download': True
         }
         
-        if tasks[task_id].get('proxy'):
-            ydl_opts['proxy'] = tasks[task_id].get('proxy')
-        elif PROXY_URL:
-            ydl_opts['proxy'] = PROXY_URL
-            
         if VERBOSE:
             ydl_opts['verbose'] = True
         
